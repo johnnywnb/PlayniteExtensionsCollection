@@ -28,6 +28,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using CodeKicker.BBCode;
+using System.Threading;
 
 namespace ReviewViewer.Controls
 {
@@ -584,7 +585,7 @@ namespace ReviewViewer.Controls
             SelectedReviewDisplayIndex = SelectedReviewIndex + 1;
             TotalReviewsAvailable = Reviews.QuerySummary.NumReviews;
             CalculateUserScore();
-            CalculateRecentScore(contextGameId);
+            CalculateRecentScore(currentGame);
             MainPanelVisibility = Visibility.Visible;
         }
 
@@ -625,10 +626,21 @@ namespace ReviewViewer.Controls
             CalculatedScore = string.Format("{0}%", Math.Round(score * 100, 2).ToString());
         }
 
-        private void CalculateRecentScore(Guid contextGameId)
+        private void CalculateRecentScore(Game game)
         {
 
-            var gameDataHistoPath = Path.Combine(pluginUserDataPath, $"{contextGameId}_histogram.json");
+            var gameDataHistoPath = Path.Combine(pluginUserDataPath, $"{game.Id}_histogram.json");
+
+            // Update ReviewChartData
+            //var gameDataHistoPath = Path.Combine(pluginDataPath, $"{game.Id}_histogram.json");
+            logger.Debug($"Refresh Review Histogram : {gameDataHistoPath}.");
+            var steamId = Steam.GetGameSteamId(game, true);
+            var reqUri = $"https://store.steampowered.com/appreviewhistogram/{steamId}?l=english";
+            logger.Debug($"URI : {reqUri}.");
+            Thread.Sleep(200);
+            HttpRequestFactory.GetHttpFileRequest().WithUrl(reqUri).WithDownloadTo(gameDataHistoPath).DownloadFile();
+            //PlayniteApi.Dialogs.ShowMessage(gameDataHistoPath);
+
             if (FileSystem.FileExists(gameDataHistoPath))
             {
                 if (!Serialization.TryFromJsonFile<ReviewHistogramResponse>(gameDataHistoPath, out var data))
@@ -653,8 +665,7 @@ namespace ReviewViewer.Controls
                 ReviewHistogramResults result = data.Result;
                 ReviewHistogramRecent[] recents = result.Recent;
 
-                logger.Warn($"Array Length: {recents.Length}.");
-
+                //logger.Warn($"Array Length: {recents.Length}.");
                 logger.Debug($"Deserialized json first recent up: {recents[0].recommendations_up}.");
 
                 foreach (var recent in recents)

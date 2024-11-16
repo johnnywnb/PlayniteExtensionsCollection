@@ -137,15 +137,6 @@ namespace ReviewViewer
                     }
                     logger.Debug($"SteamID : {steamId}.");
 
-                    // Update ReviewChartData
-                    var gameDataHistoPath = Path.Combine(pluginDataPath, $"{game.Id}_histogram.json");
-                    logger.Debug($"Refresh Review Histogram : {gameDataHistoPath}.");
-                    var reqUri = $"https://store.steampowered.com/appreviewhistogram/{steamId}?l=english";
-                    logger.Debug($"URI : {reqUri}.");
-                    Thread.Sleep(200);
-                    HttpRequestFactory.GetHttpFileRequest().WithUrl(reqUri).WithDownloadTo(gameDataHistoPath).DownloadFile();
-                    //PlayniteApi.Dialogs.ShowMessage(gameDataHistoPath);
-
                     foreach (string reviewSearchType in reviewSearchTypes)
                     {
                         var gameDataPath = Path.Combine(pluginDataPath, $"{game.Id}_{reviewSearchType}.json");
