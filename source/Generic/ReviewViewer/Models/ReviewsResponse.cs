@@ -22,7 +22,34 @@ namespace ReviewViewer.Models
         public string Cursor { get; set; }
     }
 
-    public partial class QuerySummary
+    public partial class ReviewHistogramResponse
+    {
+        [SerializationPropertyName("success")]
+        public int Success { get; set; }
+
+        [SerializationPropertyName("results")]
+        public ReviewHistogramResults Result { get; set; }
+    }
+
+    public partial class ReviewHistogramResults
+    {
+        [SerializationPropertyName("recent")]
+        public ReviewHistogramRecent[] Recent { get; set; }
+    }
+
+    public partial class ReviewHistogramRecent
+    {
+        [SerializationPropertyName("date")]
+        public long date { get; set; }
+
+        [SerializationPropertyName("recommendations_up")]
+        public int recommendations_up { get; set; }
+
+        [SerializationPropertyName("recommendations_down")]
+        public int recommendations_down { get; set; }
+    }
+
+        public partial class QuerySummary
     {
         [SerializationPropertyName("num_reviews")]
         public long NumReviews { get; set; }

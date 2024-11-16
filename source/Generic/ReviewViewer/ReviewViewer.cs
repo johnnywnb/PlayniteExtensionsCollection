@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using static ReviewViewer.Controls.ReviewsControl;
+using System.Security.Policy;
 
 namespace ReviewViewer
 {
@@ -114,11 +116,13 @@ namespace ReviewViewer
             var progressTitle = ResourceProvider.GetString("LOCReview_Viewer_DialogDataUpdateProgressMessage");
             var progressOptions = new GlobalProgressOptions(progressTitle, true);
             progressOptions.IsIndeterminate = false;
+            logger.Debug("RefreshReviews");
             PlayniteApi.Dialogs.ActivateGlobalProgress((a) =>
             {
                 a.ProgressMaxValue = games.Count() + 1;
                 foreach (Game game in games)
                 {
+                    logger.Debug($"Refresh Review for {game.Name}.");
                     if (a.CancelToken.IsCancellationRequested)
                     {
                         break;
@@ -128,8 +132,19 @@ namespace ReviewViewer
                     var steamId = Steam.GetGameSteamId(game, true);
                     if (steamId.IsNullOrEmpty())
                     {
+                        logger.Debug($"SteamID: null");
                         continue;
                     }
+                    logger.Debug($"SteamID : {steamId}.");
+
+                    // Update ReviewChartData
+                    var gameDataHistoPath = Path.Combine(pluginDataPath, $"{game.Id}_histogram.json");
+                    logger.Debug($"Refresh Review Histogram : {gameDataHistoPath}.");
+                    var reqUri = $"https://store.steampowered.com/appreviewhistogram/{steamId}?l=english";
+                    logger.Debug($"URI : {reqUri}.");
+                    Thread.Sleep(200);
+                    HttpRequestFactory.GetHttpFileRequest().WithUrl(reqUri).WithDownloadTo(gameDataHistoPath).DownloadFile();
+                    //PlayniteApi.Dialogs.ShowMessage(gameDataHistoPath);
 
                     foreach (string reviewSearchType in reviewSearchTypes)
                     {

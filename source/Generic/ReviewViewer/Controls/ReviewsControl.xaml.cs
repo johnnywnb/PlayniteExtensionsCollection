@@ -142,6 +142,17 @@ namespace ReviewViewer.Controls
             }
         }
 
+        private string recentScore;
+        public string RecentScore
+        {
+            get => recentScore;
+            set
+            {
+                recentScore = value;
+                OnPropertyChanged();
+            }
+        }
+
         private int selectedReviewDisplayIndex;
         public int SelectedReviewDisplayIndex
         {
@@ -460,6 +471,7 @@ namespace ReviewViewer.Controls
             ReviewHelpfulnessFunny = string.Empty;
             SettingsModel.Settings.IsControlVisible = false;
             CalculatedScore = "-";
+            RecentScore = "-";
             CurrentSteamId = null;
         }
 
@@ -572,6 +584,7 @@ namespace ReviewViewer.Controls
             SelectedReviewDisplayIndex = SelectedReviewIndex + 1;
             TotalReviewsAvailable = Reviews.QuerySummary.NumReviews;
             CalculateUserScore();
+            CalculateRecentScore(contextGameId);
             MainPanelVisibility = Visibility.Visible;
         }
 
@@ -610,6 +623,50 @@ namespace ReviewViewer.Controls
             double reviewScore = totalPositiveReviews / totalReviews;
             var score = reviewScore - (reviewScore - 0.5) * Math.Pow(2, -Math.Log10(totalReviews + 1));
             CalculatedScore = string.Format("{0}%", Math.Round(score * 100, 2).ToString());
+        }
+
+        private void CalculateRecentScore(Guid contextGameId)
+        {
+
+            var gameDataHistoPath = Path.Combine(pluginUserDataPath, $"{contextGameId}_histogram.json");
+            if (FileSystem.FileExists(gameDataHistoPath))
+            {
+                if (!Serialization.TryFromJsonFile<ReviewHistogramResponse>(gameDataHistoPath, out var data))
+                {
+                    RecentScore = "-";
+                    logger.Warn($"Deserialization failed for {gameDataHistoPath}.");
+                    return;
+                }
+
+                ReviewHistogramResponse response = data;
+
+                if (response.Success != 1)
+                {
+                    logger.Warn($"Deserialized json in {gameDataHistoPath} had Success value {data.Success}.");
+                    return;
+                }
+
+
+                double ups = 0;
+                double downs = 0;
+
+                ReviewHistogramResults result = data.Result;
+                ReviewHistogramRecent[] recents = result.Recent;
+
+                logger.Warn($"Array Length: {recents.Length}.");
+
+                logger.Debug($"Deserialized json first recent up: {recents[0].recommendations_up}.");
+
+                foreach (var recent in recents)
+                {
+                    ups += recent.recommendations_up;
+                    downs+= recent.recommendations_down;
+                }
+                if ((ups+downs) > 0)
+                {
+                    RecentScore = string.Format("{0}%", Math.Round(ups / (ups + downs) * 100, 2).ToString());
+                }
+            }
         }
 
     }

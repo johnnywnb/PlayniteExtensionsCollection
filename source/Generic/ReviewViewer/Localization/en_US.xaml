@@ -17,6 +17,7 @@
     <sys:String x:Key="LOCReview_Viewer_PositiveUserReviews">Positive reviews:</sys:String>
     <sys:String x:Key="LOCReview_Viewer_NegativeUserReviews">Negative reviews:</sys:String>
     <sys:String x:Key="LOCReview_Viewer_AverageUserScore">Average score:</sys:String>
+    <sys:String x:Key="LOCReview_Viewer_RecentUserScore">Recent Score:</sys:String>
 
     <sys:String x:Key="LOCReview_Viewer_ReviewsTypeLabel">Reviews type:</sys:String>
     <sys:String x:Key="LOCReview_Viewer_ReviewTypeAll">All</sys:String>
